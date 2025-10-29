@@ -32,7 +32,7 @@ export function RepairOrderDetail({
   onBack: () => void
   onEdit: (order: RepairOrder) => void
 }) {
-  const totalCost = order.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0)
+  const totalCost = order.items?.reduce((sum, item) => sum + item.quantity * item.unit_price, 0) ?? 0
 
   const statusConfig = {
     pending: { label: "Pendiente", color: "bg-yellow-500/20 text-yellow-400" },
@@ -92,7 +92,7 @@ export function RepairOrderDetail({
               </Button>
             </div>
             <div className="space-y-2">
-              {order.items.map((item) => (
+              {(order.items || []).map((item) => (
                 <div key={item.id} className="flex items-center justify-between p-3 bg-slate-700/30 rounded-lg">
                   <div>
                     <p className="font-medium text-sm">{item.description}</p>
@@ -103,6 +103,9 @@ export function RepairOrderDetail({
                   <p className="font-semibold">€{(item.quantity * item.unit_price).toFixed(2)}</p>
                 </div>
               ))}
+              {(!order.items || order.items.length === 0) && (
+                <p className="text-sm text-muted-foreground text-center py-4">No hay artículos agregados</p>
+              )}
             </div>
             <div className="mt-4 pt-4 border-t border-border">
               <div className="flex items-center justify-between">

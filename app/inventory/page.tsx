@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Search, AlertTriangle } from "lucide-react"
+import { Plus, Search, AlertTriangle, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InventoryList } from "@/components/inventory/inventory-list"
@@ -9,12 +9,15 @@ import { InventoryForm } from "@/components/inventory/inventory-form"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs"
 import { dbService } from "@/lib/db-service"
 import { useToast } from "@/hooks/use-toast"
+import { useSearchParams, useRouter } from "next/navigation"
 
 export default function InventoryPage() {
   const [showForm, setShowForm] = useState(false)
   const [searchQuery, setSearchQuery] = useState("")
   const [selectedItem, setSelectedItem] = useState<any>(null)
-  const [activeTab, setActiveTab] = useState("all")
+  const searchParams = useSearchParams()
+  const router = useRouter()
+  const [activeTab, setActiveTab] = useState(searchParams.get("filter") || "all")
   const [inventory, setInventory] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
@@ -22,6 +25,13 @@ export default function InventoryPage() {
   useEffect(() => {
     loadInventory()
   }, [])
+
+  useEffect(() => {
+    const filter = searchParams.get("filter")
+    if (filter) {
+      setActiveTab(filter)
+    }
+  }, [searchParams])
 
   const loadInventory = async () => {
     try {
@@ -91,9 +101,14 @@ export default function InventoryPage() {
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Gestión de Inventario</h2>
-            <p className="text-sm text-muted-foreground mt-1">Administra el stock de partes y suministros</p>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
+              <ArrowLeft size={20} />
+            </Button>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Gestión de Inventario</h2>
+              <p className="text-sm text-muted-foreground mt-1">Administra el stock de partes y suministros</p>
+            </div>
           </div>
           <Button onClick={handleCreateNew} className="gap-2">
             <Plus size={20} />

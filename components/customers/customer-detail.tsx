@@ -110,7 +110,7 @@ export function CustomerDetail({
               <DollarSign className="text-green-400" size={20} />
               <div>
                 <p className="text-sm text-muted-foreground">Gasto total</p>
-                <p className="font-semibold text-lg text-green-400">€{customer.total_spent.toFixed(2)}</p>
+                <p className="font-semibold text-lg text-green-400">€{(customer.total_spent ?? 0).toFixed(2)}</p>
               </div>
             </div>
           </div>

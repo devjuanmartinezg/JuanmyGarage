@@ -1,17 +1,21 @@
 "use client"
 
 import { Bell, User, LogOut, Settings } from "lucide-react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useRef } from "react"
 import { ThemeToggle } from "./theme-toggle"
 import { mockAppointments, mockInventory } from "@/lib/mock-data"
 import { createClient } from "@/lib/supabase/client"
 import { useRouter } from "next/navigation"
+import Link from "next/link"
 
 export function DashboardHeader() {
   const [showUserMenu, setShowUserMenu] = useState(false)
   const [showNotifications, setShowNotifications] = useState(false)
   const [userEmail, setUserEmail] = useState<string | null>(null)
   const router = useRouter()
+
+  const userMenuRef = useRef<HTMLDivElement>(null)
+  const notificationsRef = useRef<HTMLDivElement>(null)
 
   useEffect(() => {
     const getUser = async () => {
@@ -24,6 +28,22 @@ export function DashboardHeader() {
       }
     }
     getUser()
+  }, [])
+
+  useEffect(() => {
+    const handleClickOutside = (event: MouseEvent) => {
+      if (userMenuRef.current && !userMenuRef.current.contains(event.target as Node)) {
+        setShowUserMenu(false)
+      }
+      if (notificationsRef.current && !notificationsRef.current.contains(event.target as Node)) {
+        setShowNotifications(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
   }, [])
 
   const handleLogout = async () => {
@@ -48,6 +68,16 @@ export function DashboardHeader() {
     }
   }
 
+  const toggleNotifications = () => {
+    setShowNotifications(!showNotifications)
+    setShowUserMenu(false)
+  }
+
+  const toggleUserMenu = () => {
+    setShowUserMenu(!showUserMenu)
+    setShowNotifications(false)
+  }
+
   return (
     <header className="bg-card border-b border-border px-6 py-4 flex items-center justify-between sticky top-0 z-10">
       <div>
@@ -60,9 +90,9 @@ export function DashboardHeader() {
         <ThemeToggle />
 
         {/* Notifications */}
-        <div className="relative">
+        <div className="relative" ref={notificationsRef}>
           <button
-            onClick={() => setShowNotifications(!showNotifications)}
+            onClick={toggleNotifications}
             className="relative p-2 hover:bg-slate-700/50 rounded-lg transition-colors group"
           >
             <Bell size={20} className="text-muted-foreground group-hover:text-foreground" />
@@ -88,7 +118,12 @@ export function DashboardHeader() {
                   <div className="divide-y divide-border">
                     {/* Low Stock Notifications */}
                     {lowStockItems.slice(0, 5).map((item) => (
-                      <div key={`stock-${item.id}`} className="px-4 py-3 hover:bg-slate-700/30 transition-colors">
+                      <Link
+                        key={`stock-${item.id}`}
+                        href="/inventory?filter=low-stock"
+                        onClick={() => setShowNotifications(false)}
+                        className="block px-4 py-3 hover:bg-slate-700/30 transition-colors"
+                      >
                         <div className="flex items-start gap-3">
                           <div className="w-2 h-2 bg-yellow-500 rounded-full mt-2 flex-shrink-0"></div>
                           <div className="flex-1 min-w-0">
@@ -98,14 +133,19 @@ export function DashboardHeader() {
                             </p>
                           </div>
                         </div>
-                      </div>
+                      </Link>
                     ))}
 
                     {/* Pending Appointments */}
                     {pendingAppointments.slice(0, 5).map((apt) => {
                       const { time, label } = formatDateTime(apt.appointment_date)
                       return (
-                        <div key={`apt-${apt.id}`} className="px-4 py-3 hover:bg-slate-700/30 transition-colors">
+                        <Link
+                          key={`apt-${apt.id}`}
+                          href="/appointments?status=pending"
+                          onClick={() => setShowNotifications(false)}
+                          className="block px-4 py-3 hover:bg-slate-700/30 transition-colors"
+                        >
                           <div className="flex items-start gap-3">
                             <div className="w-2 h-2 bg-blue-500 rounded-full mt-2 flex-shrink-0"></div>
                             <div className="flex-1 min-w-0">
@@ -115,7 +155,7 @@ export function DashboardHeader() {
                               </p>
                             </div>
                           </div>
-                        </div>
+                        </Link>
                       )
                     })}
                   </div>
@@ -134,11 +174,8 @@ export function DashboardHeader() {
         </div>
 
         {/* User Menu */}
-        <div className="relative">
-          <button
-            onClick={() => setShowUserMenu(!showUserMenu)}
-            className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors"
-          >
+        <div className="relative" ref={userMenuRef}>
+          <button onClick={toggleUserMenu} className="p-2 hover:bg-slate-700/50 rounded-lg transition-colors">
             <User size={20} className="text-muted-foreground" />
           </button>
 

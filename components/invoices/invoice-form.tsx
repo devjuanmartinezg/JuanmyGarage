@@ -88,7 +88,6 @@ export function InvoiceForm({ invoice, onClose, onSave }: InvoiceFormProps) {
       tax: tax,
       total: total,
     }
-    console.log("[v0] Saving invoice:", invoiceData)
     onSave(invoiceData)
   }
 

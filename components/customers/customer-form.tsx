@@ -28,7 +28,6 @@ export function CustomerForm({ customer, onClose, onSave }: CustomerFormProps) {
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
-    // Handle form submission
     const customerData = {
       ...formData,
       id: customer?.id || Date.now(),
@@ -36,7 +35,6 @@ export function CustomerForm({ customer, onClose, onSave }: CustomerFormProps) {
       appointments_count: customer?.appointments_count || 0,
       total_spent: customer?.total_spent || 0,
     }
-    console.log("[v0] Saving customer:", customerData)
     onSave(customerData)
   }
 

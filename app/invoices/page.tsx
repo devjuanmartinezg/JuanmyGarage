@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Plus, Search, Filter } from "lucide-react"
+import { Plus, Search, Filter, ArrowLeft } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { InvoicesList } from "@/components/invoices/invoices-list"
@@ -10,6 +10,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { dbService } from "@/lib/db-service"
 import { useToast } from "@/hooks/use-toast"
 import { mockInvoices } from "@/lib/mock-data"
+import { useRouter } from "next/navigation"
 
 export default function InvoicesPage() {
   const [showForm, setShowForm] = useState(false)
@@ -19,6 +20,7 @@ export default function InvoicesPage() {
   const [invoices, setInvoices] = useState<any[]>([])
   const [loading, setLoading] = useState(true)
   const { toast } = useToast()
+  const router = useRouter()
 
   useEffect(() => {
     loadInvoices()
@@ -90,9 +92,14 @@ export default function InvoicesPage() {
       {/* Header */}
       <div className="bg-card border-b border-border px-6 py-4">
         <div className="flex items-center justify-between mb-4">
-          <div>
-            <h2 className="text-2xl font-bold text-foreground">Facturas</h2>
-            <p className="text-sm text-muted-foreground mt-1">Administra todas las facturas del taller</p>
+          <div className="flex items-center gap-4">
+            <Button variant="ghost" size="icon" onClick={() => router.back()} className="shrink-0">
+              <ArrowLeft size={20} />
+            </Button>
+            <div>
+              <h2 className="text-2xl font-bold text-foreground">Facturas</h2>
+              <p className="text-sm text-muted-foreground mt-1">Administra todas las facturas del taller</p>
+            </div>
           </div>
           <Button onClick={handleCreateNew} className="gap-2">
             <Plus size={20} />

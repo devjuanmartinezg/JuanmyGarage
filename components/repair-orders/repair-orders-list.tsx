@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Wrench, Calendar, DollarSign, Edit2, Trash2, Eye, AlertCircle } from "lucide-react"
 import { Button } from "@/components/ui/button"
 import { RepairOrderDetail } from "./repair-order-detail"
@@ -49,6 +49,10 @@ export function RepairOrdersList({
   const [orders, setOrders] = useState(initialOrders)
   const [selectedOrder, setSelectedOrder] = useState<RepairOrder | null>(null)
 
+  useEffect(() => {
+    setOrders(initialOrders)
+  }, [initialOrders])
+
   let filteredOrders = orders.filter(
     (order) =>
       order.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -85,7 +89,7 @@ export function RepairOrdersList({
       ) : (
         filteredOrders.map((order) => {
           const config = statusConfig[order.status]
-          const totalCost = order.items.reduce((sum, item) => sum + item.quantity * item.unit_price, 0)
+          const totalCost = order.items?.reduce((sum, item) => sum + item.quantity * item.unit_price, 0) ?? 0
 
           return (
             <div key={order.id} className={`card hover:border-primary/50 transition-colors ${config.bgColor}`}>

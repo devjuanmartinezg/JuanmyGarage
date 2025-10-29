@@ -4,27 +4,50 @@ import { StatCard } from "./stat-card"
 import { Calendar, Package, Wrench, TrendingUp, AlertCircle, ArrowRight, Users, FileText } from "lucide-react"
 import { Button } from "./ui/button"
 import { useRouter } from "next/navigation"
-import { mockAppointments, mockRepairOrders, mockInventory, mockInvoices } from "@/lib/mock-data"
+import { mockRepairOrders, mockInventory, mockInvoices } from "@/lib/mock-data"
+import { useState, useEffect } from "react"
+import { dbService } from "@/lib/db-service"
+import { AppointmentForm } from "./appointments/appointment-form"
+import { CustomerForm } from "./customers/customer-form"
+import { RepairOrderForm } from "./repair-orders/repair-order-form"
+import { InvoiceForm } from "./invoices/invoice-form"
+import { useToast } from "@/hooks/use-toast"
 
 export function DashboardGrid() {
   const router = useRouter()
+  const { toast } = useToast()
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [showAppointmentForm, setShowAppointmentForm] = useState(false)
+  const [showCustomerForm, setShowCustomerForm] = useState(false)
+  const [showOrderForm, setShowOrderForm] = useState(false)
+  const [showInvoiceForm, setShowInvoiceForm] = useState(false)
+
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        const data = await dbService.getAppointments()
+        setAppointments(data)
+      } catch (error) {
+        console.error("[v0] Error loading appointments:", error)
+      }
+    }
+    loadAppointments()
+  }, [])
 
   const today = new Date().toISOString().split("T")[0]
-  const todayAppointments = mockAppointments.filter((apt) => apt.appointment_date.startsWith(today))
+  const todayAppointments = appointments.filter((apt) => apt.appointment_date.startsWith(today))
   const activeOrders = mockRepairOrders.filter((order) => order.status === "in_progress" || order.status === "pending")
   const lowStockItems = mockInventory.filter((item) => item.quantity < item.min_quantity)
 
-  // Calculate today's revenue from paid invoices
   const todayRevenue = mockInvoices
     .filter((inv) => inv.status === "paid" && inv.issue_date === today)
     .reduce((sum, inv) => sum + inv.total, 0)
 
-  // Get upcoming appointments (today and tomorrow)
   const tomorrow = new Date()
   tomorrow.setDate(tomorrow.getDate() + 1)
   const tomorrowStr = tomorrow.toISOString().split("T")[0]
 
-  const upcomingAppointments = mockAppointments
+  const upcomingAppointments = appointments
     .filter((apt) => apt.appointment_date.startsWith(today) || apt.appointment_date.startsWith(tomorrowStr))
     .sort((a, b) => new Date(a.appointment_date).getTime() - new Date(b.appointment_date).getTime())
     .slice(0, 3)
@@ -62,6 +85,112 @@ export function DashboardGrid() {
     }
   }
 
+  const handleSaveAppointment = async (appointmentData: any) => {
+    try {
+      await dbService.createAppointment(appointmentData)
+      toast({
+        title: "Cita creada",
+        description: "La nueva cita se ha creado correctamente",
+      })
+      setShowAppointmentForm(false)
+      const data = await dbService.getAppointments()
+      setAppointments(data)
+    } catch (error) {
+      console.error("[v0] Error saving appointment:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la cita",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSaveCustomer = async (customerData: any) => {
+    try {
+      await dbService.createCustomer(customerData)
+      toast({
+        title: "Cliente creado",
+        description: "El nuevo cliente se ha creado correctamente",
+      })
+      setShowCustomerForm(false)
+    } catch (error) {
+      console.error("[v0] Error saving customer:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar el cliente",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSaveOrder = async (orderData: any) => {
+    try {
+      await dbService.createRepairOrder(orderData)
+      toast({
+        title: "Orden creada",
+        description: "La nueva orden se ha creado correctamente",
+      })
+      setShowOrderForm(false)
+    } catch (error) {
+      console.error("[v0] Error saving repair order:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la orden",
+        variant: "destructive",
+      })
+    }
+  }
+
+  const handleSaveInvoice = async (invoiceData: any) => {
+    try {
+      await dbService.createInvoice(invoiceData)
+      toast({
+        title: "Factura creada",
+        description: "La nueva factura se ha creado correctamente",
+      })
+      setShowInvoiceForm(false)
+    } catch (error) {
+      console.error("[v0] Error saving invoice:", error)
+      toast({
+        title: "Error",
+        description: "No se pudo guardar la factura",
+        variant: "destructive",
+      })
+    }
+  }
+
+  if (showAppointmentForm) {
+    return (
+      <div className="p-6">
+        <AppointmentForm onSave={handleSaveAppointment} onClose={() => setShowAppointmentForm(false)} />
+      </div>
+    )
+  }
+
+  if (showCustomerForm) {
+    return (
+      <div className="p-6">
+        <CustomerForm onSave={handleSaveCustomer} onClose={() => setShowCustomerForm(false)} />
+      </div>
+    )
+  }
+
+  if (showOrderForm) {
+    return (
+      <div className="p-6">
+        <RepairOrderForm onSave={handleSaveOrder} onClose={() => setShowOrderForm(false)} />
+      </div>
+    )
+  }
+
+  if (showInvoiceForm) {
+    return (
+      <div className="p-6">
+        <InvoiceForm onSave={handleSaveInvoice} onClose={() => setShowInvoiceForm(false)} />
+      </div>
+    )
+  }
+
   return (
     <div className="p-6 space-y-6">
       {/* Stats Grid */}
@@ -70,7 +199,7 @@ export function DashboardGrid() {
           icon={Calendar}
           label="Citas Hoy"
           value={todayAppointments.length.toString()}
-          change={`${mockAppointments.length} total este mes`}
+          change={`${appointments.length} total este mes`}
           color="blue"
         />
         <StatCard
@@ -152,7 +281,7 @@ export function DashboardGrid() {
             <Button
               className="w-full justify-start gap-2"
               variant="default"
-              onClick={() => router.push("/appointments")}
+              onClick={() => setShowAppointmentForm(true)}
             >
               <Calendar size={18} />
               Nueva Cita
@@ -160,7 +289,7 @@ export function DashboardGrid() {
             <Button
               className="w-full justify-start gap-2 bg-transparent"
               variant="outline"
-              onClick={() => router.push("/customers")}
+              onClick={() => setShowCustomerForm(true)}
             >
               <Users size={18} />
               Nuevo Cliente
@@ -168,7 +297,7 @@ export function DashboardGrid() {
             <Button
               className="w-full justify-start gap-2 bg-transparent"
               variant="outline"
-              onClick={() => router.push("/repair-orders")}
+              onClick={() => setShowOrderForm(true)}
             >
               <Wrench size={18} />
               Nueva Orden
@@ -176,7 +305,7 @@ export function DashboardGrid() {
             <Button
               className="w-full justify-start gap-2 bg-transparent"
               variant="outline"
-              onClick={() => router.push("/invoices")}
+              onClick={() => setShowInvoiceForm(true)}
             >
               <FileText size={18} />
               Nueva Factura
@@ -186,7 +315,7 @@ export function DashboardGrid() {
       </div>
 
       {/* Alerts */}
-      {(lowStockItems.length > 0 || mockAppointments.some((apt) => apt.status === "pending")) && (
+      {(lowStockItems.length > 0 || appointments.some((apt) => apt.status === "pending")) && (
         <div className="card border-l-4 border-l-yellow-500 bg-yellow-500/5">
           <div className="flex items-start gap-3">
             <AlertCircle className="text-yellow-500 mt-1 flex-shrink-0" size={20} />
@@ -198,7 +327,7 @@ export function DashboardGrid() {
                     • {item.name}: Stock bajo ({item.quantity} unidades, mínimo {item.min_quantity})
                   </li>
                 ))}
-                {mockAppointments
+                {appointments
                   .filter((apt) => apt.status === "pending")
                   .slice(0, 2)
                   .map((apt) => {

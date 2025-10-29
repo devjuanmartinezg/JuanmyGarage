@@ -15,6 +15,7 @@ export default function SignUpPage() {
   const [email, setEmail] = useState("")
   const [password, setPassword] = useState("")
   const [repeatPassword, setRepeatPassword] = useState("")
+  const [privateCode, setPrivateCode] = useState("")
   const [error, setError] = useState<string | null>(null)
   const [isLoading, setIsLoading] = useState(false)
   const router = useRouter()
@@ -24,6 +25,12 @@ export default function SignUpPage() {
     const supabase = createClient()
     setIsLoading(true)
     setError(null)
+
+    if (privateCode !== "Taller2025") {
+      setError("Código privado incorrecto")
+      setIsLoading(false)
+      return
+    }
 
     if (password !== repeatPassword) {
       setError("Las contraseñas no coinciden")
@@ -59,7 +66,7 @@ export default function SignUpPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400">MechanicERP</h1>
+            <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400">Juanmy Garage</h1>
             <p className="text-sm text-muted-foreground">Sistema de Gestión de Taller</p>
           </div>
           <Card>
@@ -99,6 +106,17 @@ export default function SignUpPage() {
                       required
                       value={repeatPassword}
                       onChange={(e) => setRepeatPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="private-code">Código Privado</Label>
+                    <Input
+                      id="private-code"
+                      type="text"
+                      placeholder="Ingresa el código privado"
+                      required
+                      value={privateCode}
+                      onChange={(e) => setPrivateCode(e.target.value)}
                     />
                   </div>
                   {error && <p className="text-sm text-red-500">{error}</p>}

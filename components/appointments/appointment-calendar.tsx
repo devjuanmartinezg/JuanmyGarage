@@ -1,11 +1,26 @@
 "use client"
 
-import { useState } from "react"
-import { ChevronLeft, ChevronRight } from "lucide-react"
+import { useState, useEffect } from "react"
+import { ChevronLeft, ChevronRight, CalendarIcon } from "lucide-react"
 import { Button } from "@/components/ui/button"
+import { getAppointments } from "@/lib/db-service"
 
 export function AppointmentCalendar({ onSelectDate }: { onSelectDate: () => void }) {
   const [currentDate, setCurrentDate] = useState(new Date(2025, 9, 28))
+  const [appointments, setAppointments] = useState<any[]>([])
+  const [selectedDay, setSelectedDay] = useState<number | null>(null)
+
+  useEffect(() => {
+    const loadAppointments = async () => {
+      try {
+        const data = await getAppointments()
+        setAppointments(data)
+      } catch (error) {
+        console.error("[v0] Error loading appointments:", error)
+      }
+    }
+    loadAppointments()
+  }, [])
 
   const getDaysInMonth = (date: Date) => {
     return new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate()
@@ -33,11 +48,29 @@ export function AppointmentCalendar({ onSelectDate }: { onSelectDate: () => void
 
   const handlePrevMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() - 1))
+    setSelectedDay(null)
   }
 
   const handleNextMonth = () => {
     setCurrentDate(new Date(currentDate.getFullYear(), currentDate.getMonth() + 1))
+    setSelectedDay(null)
   }
+
+  const hasAppointments = (day: number) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    return appointments.some((apt) => apt.appointment_date.startsWith(dateStr))
+  }
+
+  const getAppointmentsForDay = (day: number) => {
+    const dateStr = `${currentDate.getFullYear()}-${String(currentDate.getMonth() + 1).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+    return appointments.filter((apt) => apt.appointment_date.startsWith(dateStr))
+  }
+
+  const handleDayClick = (day: number) => {
+    setSelectedDay(day)
+  }
+
+  const selectedDayAppointments = selectedDay ? getAppointmentsForDay(selectedDay) : []
 
   return (
     <div className="p-6">
@@ -73,10 +106,17 @@ export function AppointmentCalendar({ onSelectDate }: { onSelectDate: () => void
                 <div key={index}>
                   {day ? (
                     <button
-                      onClick={onSelectDate}
-                      className="w-full aspect-square flex items-center justify-center rounded-lg border border-border hover:bg-primary hover:text-white hover:border-primary transition-colors text-sm font-medium"
+                      onClick={() => handleDayClick(day)}
+                      className={`w-full aspect-square flex items-center justify-center rounded-lg border transition-colors text-sm font-medium relative ${
+                        selectedDay === day
+                          ? "bg-primary text-white border-primary"
+                          : "border-border hover:bg-primary hover:text-white hover:border-primary"
+                      }`}
                     >
                       {day}
+                      {hasAppointments(day) && (
+                        <span className="absolute bottom-1 w-1 h-1 bg-green-500 rounded-full"></span>
+                      )}
                     </button>
                   ) : (
                     <div className="w-full aspect-square" />
@@ -88,16 +128,50 @@ export function AppointmentCalendar({ onSelectDate }: { onSelectDate: () => void
 
           {/* Appointments for selected date */}
           <div className="mt-6 pt-6 border-t border-border">
-            <h4 className="font-semibold mb-4">Citas Próximas</h4>
+            <h4 className="font-semibold mb-4 flex items-center gap-2">
+              <CalendarIcon size={18} className="text-primary" />
+              {selectedDay ? `Citas del día ${selectedDay}` : "Citas Próximas"}
+            </h4>
             <div className="space-y-2">
-              <div className="p-3 bg-slate-700/30 rounded-lg border border-border">
-                <p className="font-medium text-sm">Carlos García</p>
-                <p className="text-xs text-muted-foreground">10:00 AM - Revisión general</p>
-              </div>
-              <div className="p-3 bg-slate-700/30 rounded-lg border border-border">
-                <p className="font-medium text-sm">María López</p>
-                <p className="text-xs text-muted-foreground">14:30 PM - Reparación de frenos</p>
-              </div>
+              {selectedDayAppointments.length > 0 ? (
+                selectedDayAppointments.map((apt) => {
+                  const time = new Date(apt.appointment_date).toLocaleTimeString("es-ES", {
+                    hour: "2-digit",
+                    minute: "2-digit",
+                  })
+                  return (
+                    <div key={apt.id} className="p-3 bg-slate-700/30 rounded-lg border border-border">
+                      <p className="font-medium text-sm">{apt.customer_name}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {time} - {apt.description}
+                      </p>
+                      <span
+                        className={`inline-block mt-1 px-2 py-0.5 rounded-full text-xs ${
+                          apt.status === "confirmed"
+                            ? "bg-green-500/20 text-green-500"
+                            : apt.status === "pending"
+                              ? "bg-yellow-500/20 text-yellow-500"
+                              : "bg-red-500/20 text-red-500"
+                        }`}
+                      >
+                        {apt.status === "confirmed"
+                          ? "Confirmada"
+                          : apt.status === "pending"
+                            ? "Pendiente"
+                            : "Cancelada"}
+                      </span>
+                    </div>
+                  )
+                })
+              ) : selectedDay ? (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  No hay citas programadas para este día
+                </div>
+              ) : (
+                <div className="text-center py-4 text-muted-foreground text-sm">
+                  Selecciona un día para ver las citas
+                </div>
+              )}
             </div>
           </div>
         </div>

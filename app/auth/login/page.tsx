@@ -44,7 +44,7 @@ export default function LoginPage() {
       <div className="w-full max-w-sm">
         <div className="flex flex-col gap-6">
           <div className="flex flex-col items-center gap-2 text-center">
-            <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400">MechanicERP</h1>
+            <h1 className="text-3xl font-bold text-blue-600 dark:text-blue-400">Juanmy Garage</h1>
             <p className="text-sm text-muted-foreground">Sistema de Gestión de Taller</p>
           </div>
           <Card>

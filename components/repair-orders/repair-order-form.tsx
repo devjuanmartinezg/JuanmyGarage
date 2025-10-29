@@ -51,7 +51,6 @@ export function RepairOrderForm({ order, onClose, onSave }: RepairOrderFormProps
       id: order?.id || Date.now(),
       items: items,
     }
-    console.log("[v0] Saving repair order:", orderData)
     onSave(orderData)
   }
 

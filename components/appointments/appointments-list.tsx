@@ -56,11 +56,13 @@ export function AppointmentsList({
   onEdit,
   appointments: externalAppointments,
   onDelete,
+  statusFilter = "all",
 }: {
   searchQuery: string
   onEdit: (appointment: any) => void
   appointments?: Appointment[]
   onDelete?: (id: number) => void
+  statusFilter?: string
 }) {
   const [appointments, setAppointments] = useState(externalAppointments || mockAppointments)
 
@@ -70,12 +72,17 @@ export function AppointmentsList({
     }
   }, [externalAppointments])
 
-  const filteredAppointments = appointments.filter(
+  let filteredAppointments = appointments.filter(
     (apt) =>
       apt.customer_name.toLowerCase().includes(searchQuery.toLowerCase()) ||
       apt.customer_phone.includes(searchQuery) ||
       apt.description.toLowerCase().includes(searchQuery.toLowerCase()),
   )
+
+  // Apply status filter
+  if (statusFilter !== "all") {
+    filteredAppointments = filteredAppointments.filter((apt) => apt.status === statusFilter)
+  }
 
   const handleDelete = (id: number) => {
     if (onDelete) {
@@ -89,7 +96,11 @@ export function AppointmentsList({
     <div className="p-6 space-y-4">
       {filteredAppointments.length === 0 ? (
         <div className="text-center py-12">
-          <p className="text-muted-foreground">No se encontraron citas</p>
+          <p className="text-muted-foreground">
+            {statusFilter !== "all"
+              ? `No se encontraron citas ${statusConfig[statusFilter as keyof typeof statusConfig]?.label.toLowerCase()}`
+              : "No se encontraron citas"}
+          </p>
         </div>
       ) : (
         filteredAppointments.map((appointment) => {

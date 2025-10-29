@@ -57,13 +57,11 @@ export function Sidebar() {
 
       {/* Sidebar */}
       <aside
-        className={`${
-          isOpen ? "w-64" : "w-0"
-        } bg-card border-r border-border transition-all duration-300 overflow-hidden md:w-64 md:relative fixed h-full z-40 flex flex-col`}
+        className={`${isOpen ? "w-64" : "w-0"} bg-card border-r border-border transition-all duration-300 overflow-hidden md:w-64 md:relative fixed h-full z-40 flex flex-col`}
       >
         {/* Logo Section */}
         <div className="p-6 border-b border-border">
-          <h1 className="text-xl font-bold text-primary">Mechanic ERP</h1>
+          <h1 className="text-xl font-bold text-primary">Juanmy Garage</h1>
           <p className="text-xs text-muted-foreground mt-1">Taller Mecánico</p>
         </div>
 
